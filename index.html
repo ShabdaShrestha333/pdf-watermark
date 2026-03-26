@@ -247,6 +247,33 @@
             </div>
         </div>
 
+        <!-- Appearance -->
+        <div class="panel" id="panelAppearance">
+            <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="panel-header-left">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span class="panel-title">Appearance</span>
+                </div>
+                <svg class="panel-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="panel-body">
+                <div class="control-group">
+                    <label class="control-label">Logo Size <span class="control-value" id="logoSizeVal">20%</span></label>
+                    <input type="range" id="wmLogoSize" min="2" max="80" value="20">
+                </div>
+                <div class="row">
+                    <div class="control-group">
+                        <label class="control-label">Rotation <span class="control-value" id="rotationVal">0°</span></label>
+                        <input type="range" id="wmRotation" min="-180" max="180" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Opacity <span class="control-value" id="opacityVal">30%</span></label>
+                        <input type="range" id="wmOpacity" min="1" max="100" value="30">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Email Stamp -->
         <div class="panel" id="panelEmail">
             <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
@@ -350,33 +377,6 @@
                     <div class="control-group" style="flex:1; margin-left:8px;">
                         <label class="control-label">Gap <span class="control-value" id="gapVal">6</span></label>
                         <input type="range" id="wmGap" min="0" max="80" value="6">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Appearance -->
-        <div class="panel" id="panelAppearance">
-            <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                <div class="panel-header-left">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    <span class="panel-title">Appearance</span>
-                </div>
-                <svg class="panel-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="panel-body">
-                <div class="control-group">
-                    <label class="control-label">Logo Size <span class="control-value" id="logoSizeVal">20%</span></label>
-                    <input type="range" id="wmLogoSize" min="2" max="80" value="20">
-                </div>
-                <div class="row">
-                    <div class="control-group">
-                        <label class="control-label">Rotation <span class="control-value" id="rotationVal">0°</span></label>
-                        <input type="range" id="wmRotation" min="-180" max="180" value="0">
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Opacity <span class="control-value" id="opacityVal">30%</span></label>
-                        <input type="range" id="wmOpacity" min="1" max="100" value="30">
                     </div>
                 </div>
             </div>
