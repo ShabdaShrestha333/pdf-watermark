@@ -13,7 +13,7 @@
             --bg: #0f1117; --surface: #161821; --surface2: #1e2130; --surface3: #262a3a;
             --border: #2a2e3e; --border-light: #353a4d;
             --text: #e8eaf0; --text-muted: #7b7f95; --text-dim: #555a6e;
-            --primary: #6c5ce7; --primary-hover: #7d6ff0; --primary-glow: rgba(108,92,231,.15);
+            --primary: #3b82f6; --primary-hover: #60a5fa; --primary-glow: rgba(59,130,246,.15);
             --accent: #00cec9; --accent-hover: #00e0db; --accent-glow: rgba(0,206,201,.12);
             --danger: #ff6b6b; --danger-glow: rgba(255,107,107,.1);
             --radius: 10px; --radius-sm: 7px;
@@ -71,7 +71,7 @@
         }
 
         input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; height:4px; background:var(--surface3); border-radius:2px; outline:none; cursor:pointer; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px; border-radius:50%; background:var(--primary); cursor:pointer; box-shadow:0 1px 4px rgba(108,92,231,.5); transition:transform .15s; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px; border-radius:50%; background:var(--primary); cursor:pointer; box-shadow:0 1px 4px rgba(59,130,246,.5); transition:transform .15s; }
         input[type="range"]::-webkit-slider-thumb:hover { transform:scale(1.2); }
         input[type="range"]::-webkit-slider-thumb:active { transform:scale(1.1); }
 
@@ -127,8 +127,8 @@
         .action-bar { padding:14px 18px; border-top:1px solid var(--border); background:var(--surface); display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
 
         /* ── Upload zones ── */
-        .upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:22px 16px; text-align:center; cursor:pointer; transition:all .25s; background:rgba(108,92,231,.02); }
-        .upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:rgba(108,92,231,.06); }
+        .upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:22px 16px; text-align:center; cursor:pointer; transition:all .25s; background:rgba(59,130,246,.02); }
+        .upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:rgba(59,130,246,.06); }
         .upload-zone svg { width:30px; height:30px; color:var(--primary); margin-bottom:8px; }
         .upload-zone h3 { font-size:13px; margin-bottom:2px; font-weight:600; }
         .upload-zone p { font-size:11px; color:var(--text-muted); }
