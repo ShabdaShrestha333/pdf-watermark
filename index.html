@@ -546,7 +546,7 @@
 
     wmDate.value = new Date().toISOString().split('T')[0];
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     // ── Utility ──
     function formatBytes(b) { if(!b) return '0 B'; const k=1024,s=['B','KB','MB','GB'],i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(1))+' '+s[i]; }
@@ -828,7 +828,7 @@
 
     updateLabels();
 
-    // ── Download: composite canvas → embed as image per page → same dimensions ──
+    // ── Download ──
     const dlBtnHTML = btnDownload.innerHTML;
     btnDownload.addEventListener('click', async () => {
         if (!pdfArrayBuffer || !logoImg) return;
@@ -837,13 +837,31 @@
 
         try {
             const { PDFDocument } = PDFLib;
-            const srcDoc = await PDFDocument.load(pdfArrayBuffer.slice(0));
-            const srcPages = srcDoc.getPages();
+
+            // Try normal load first; fall back to ignoreEncryption
+            let srcDoc, isEncrypted = false;
+            try {
+                srcDoc = await PDFDocument.load(pdfArrayBuffer.slice(0));
+            } catch(e) {
+                srcDoc = await PDFDocument.load(pdfArrayBuffer.slice(0), { ignoreEncryption: true });
+                isEncrypted = true;
+            }
+
+            // For encrypted PDFs, use pdf.js for page count (getPages() fails on encrypted)
+            let pdfJsDoc = null;
+            let totalPg;
+            if (!isEncrypted) {
+                totalPg = srcDoc.getPages().length;
+            } else {
+                pdfJsDoc = await pdfjsLib.getDocument({ data: new Uint8Array(pdfArrayBuffer.slice(0)) }).promise;
+                totalPg = pdfJsDoc.numPages;
+            }
+
             // Parse which pages to watermark
             const pagesToMark = new Set();
             const mode = pageMode.value;
             if (mode === 'all') {
-                for (let i = 0; i < srcPages.length; i++) pagesToMark.add(i);
+                for (let i = 0; i < totalPg; i++) pagesToMark.add(i);
             } else if (mode === 'first') {
                 pagesToMark.add(0);
             } else if (mode === 'current') {
@@ -856,107 +874,87 @@
                     const trimmed = part.trim();
                     if (trimmed.includes('-')) {
                         const [a, b] = trimmed.split('-').map(s => parseInt(s.trim()));
-                        if (!isNaN(a) && !isNaN(b)) { for (let n = Math.max(1,a); n <= Math.min(b, srcPages.length); n++) pagesToMark.add(n-1); }
+                        if (!isNaN(a) && !isNaN(b)) { for (let n = Math.max(1,a); n <= Math.min(b, totalPg); n++) pagesToMark.add(n-1); }
                     } else {
                         const n = parseInt(trimmed);
-                        if (!isNaN(n) && n >= 1 && n <= srcPages.length) pagesToMark.add(n-1);
+                        if (!isNaN(n) && n >= 1 && n <= totalPg) pagesToMark.add(n-1);
                     }
                 }
                 if (pagesToMark.size === 0) { showToast('No valid pages specified'); btnDownload.disabled = false; btnDownload.innerHTML = dlBtnHTML; return; }
             }
 
-            const offPdf = pdfCanvas.ownerDocument.createElement('canvas');
-            const offPdfCtx = offPdf.getContext('2d');
-            const offWm = pdfCanvas.ownerDocument.createElement('canvas');
-            const offWmCtx = offWm.getContext('2d');
+            // Watermark parameters
+            const sizePct = parseInt(wmLogoSize.value) / 100;
+            const rotation = parseInt(wmRotation.value);
+            const opacity = parseInt(wmOpacity.value) / 100;
+            const posXPct = parseInt(wmPosX.value) / 100;
+            const posYPct = parseInt(wmPosY.value) / 100;
+            const isRepeat = repeatWm.checked;
+            const spacingPct = parseInt(wmSpacing.value) / 100;
+            const dateVisible = showDate.checked;
+            const dateStr = formatDateStr(wmDate.value, dateFormat.value);
+            const dfs = parseInt(dateFontSize.value);
+            const dColor = dateColor.value;
+            const gapVal = parseInt(wmGap.value);
+            const fontFamily = wmFontFamily.value;
+            const emVisible = showEmail.checked;
+            const emStr = wmEmail.value.trim();
+            const emfs = parseInt(emailFontSize.value);
+            const emColor = emailColor.value;
+            const wmScale = 3;
 
-            const pdfJsDoc = await pdfjsLib.getDocument({ data: new Uint8Array(pdfArrayBuffer.slice(0)) }).promise;
+            const buildDlFont = (sizePx) => {
+                let prefix = '';
+                if (wmItalic.checked) prefix += 'italic ';
+                prefix += wmBold.checked ? 'bold ' : 'normal ';
+                return `${prefix}${sizePx}px ${fontFamily}`;
+            };
 
-            for (let i = 0; i < srcPages.length; i++) {
-                if (!pagesToMark.has(i)) continue;
-
-                const page = await pdfJsDoc.getPage(i + 1);
-                const srcPage = srcPages[i];
-                const { width: pw, height: ph } = srcPage.getSize();
-
-                // Render at 2x for quality
-                const hiScale = 2;
-                const viewport = page.getViewport({ scale: hiScale });
-                offPdf.width = viewport.width;
-                offPdf.height = viewport.height;
-                offWm.width = viewport.width;
-                offWm.height = viewport.height;
-
-                await page.render({ canvasContext: offPdfCtx, viewport }).promise;
-
-                // Draw watermark with same logic
-                offWmCtx.clearRect(0, 0, offWm.width, offWm.height);
-                const cw = offWm.width, ch = offWm.height;
-                const sizePct = parseInt(wmLogoSize.value) / 100;
-                const rotation = parseInt(wmRotation.value);
-                const opacity = parseInt(wmOpacity.value) / 100;
-                const posXPct = parseInt(wmPosX.value) / 100;
-                const posYPct = parseInt(wmPosY.value) / 100;
-                const isRepeat = repeatWm.checked;
-                const spacing = parseInt(wmSpacing.value) / 100;
-                const dateVisible = showDate.checked;
-                const dateStr = formatDateStr(wmDate.value, dateFormat.value);
-                const dfs = parseInt(dateFontSize.value);
-                const dColor = dateColor.value;
-                const dlGap = parseInt(wmGap.value) * hiScale;
-                const fontFamily = wmFontFamily.value;
-                const emVisible = showEmail.checked;
-                const emStr = wmEmail.value.trim();
-                const emfs = parseInt(emailFontSize.value);
-                const emColor = emailColor.value;
+            // Draws watermark elements on a canvas context of size cw x ch
+            // scaleOverride: optional, used for encrypted PDFs rendered at higher DPI
+            const paintWatermark = (ctx, cw, ch, scaleOverride) => {
+                const sc = scaleOverride || wmScale;
                 const logoW = cw * sizePct;
                 const logoH = (logoImg.naturalHeight / logoImg.naturalWidth) * logoW;
+                const dlGap = gapVal * sc;
 
-                // Text block height for tiling (Logo → Email → Date)
                 let textBlockH = 0;
-                if (emVisible && emStr) textBlockH += dlGap + emfs * hiScale;
-                if (dateVisible) textBlockH += dlGap + dfs * hiScale;
+                if (emVisible && emStr) textBlockH += dlGap + emfs * sc;
+                if (dateVisible && wmDate.value) textBlockH += dlGap + dfs * sc;
 
-                offWmCtx.globalAlpha = opacity;
+                ctx.globalAlpha = opacity;
 
-                function buildDlFont(sizePx) {
-                    let prefix = '';
-                    if (wmItalic.checked) prefix += 'italic ';
-                    prefix += wmBold.checked ? 'bold ' : 'normal ';
-                    return `${prefix}${sizePx}px ${fontFamily}`;
-                }
-
-                function drawOne(cx, cy) {
-                    offWmCtx.save();
-                    offWmCtx.translate(cx, cy);
-                    offWmCtx.rotate((rotation * Math.PI) / 180);
-                    offWmCtx.drawImage(logoImg, -logoW/2, -logoH/2, logoW, logoH);
+                const drawOne = (cx, cy) => {
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate((rotation * Math.PI) / 180);
+                    ctx.drawImage(logoImg, -logoW/2, -logoH/2, logoW, logoH);
                     let yOff = logoH / 2;
                     if (emVisible && emStr) {
                         yOff += dlGap;
-                        const scaledFs = emfs * hiScale;
-                        offWmCtx.font = buildDlFont(scaledFs);
-                        offWmCtx.fillStyle = emColor;
-                        offWmCtx.textAlign = 'center';
-                        offWmCtx.textBaseline = 'top';
-                        offWmCtx.fillText(emStr, 0, yOff);
+                        const scaledFs = emfs * sc;
+                        ctx.font = buildDlFont(scaledFs);
+                        ctx.fillStyle = emColor;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(emStr, 0, yOff);
                         yOff += scaledFs;
                     }
                     if (dateVisible && wmDate.value) {
                         yOff += dlGap;
-                        const scaledFs = dfs * hiScale;
-                        offWmCtx.font = buildDlFont(scaledFs);
-                        offWmCtx.fillStyle = dColor;
-                        offWmCtx.textAlign = 'center';
-                        offWmCtx.textBaseline = 'top';
-                        offWmCtx.fillText(dateStr, 0, yOff);
+                        const scaledFs = dfs * sc;
+                        ctx.font = buildDlFont(scaledFs);
+                        ctx.fillStyle = dColor;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(dateStr, 0, yOff);
                         yOff += scaledFs;
                     }
-                    offWmCtx.restore();
-                }
+                    ctx.restore();
+                };
 
                 if (isRepeat) {
-                    const gapX = cw * spacing, gapY = ch * spacing;
+                    const gapX = cw * spacingPct, gapY = ch * spacingPct;
                     const sX = (cw * posXPct) % (logoW + gapX) - logoW;
                     const sY = (ch * posYPct) % (logoH + textBlockH + gapY) - logoH;
                     for (let yy = sY; yy < ch + logoH; yy += logoH + textBlockH + gapY) {
@@ -968,28 +966,197 @@
                     drawOne(cw * posXPct, ch * (1 - posYPct));
                 }
 
-                offWmCtx.globalAlpha = 1;
+                ctx.globalAlpha = 1;
+            };
 
-                // Composite: draw watermark onto PDF canvas
-                offPdfCtx.drawImage(offWm, 0, 0);
+            // Helper: canvas → PNG bytes
+            const canvasToPngBytes = (canvas) => {
+                const dataUrl = canvas.toDataURL('image/png');
+                return Uint8Array.from(atob(dataUrl.split(',')[1]), c => c.charCodeAt(0));
+            };
 
-                // Get composited image as PNG
-                const imgDataUrl = offPdf.toDataURL('image/png');
-                const imgBytes = Uint8Array.from(atob(imgDataUrl.split(',')[1]), c => c.charCodeAt(0));
-                const embeddedImg = await srcDoc.embedPng(imgBytes);
+            let pdfBytes;
 
-                // Clear original page content and draw full-page image
-                // We overlay the watermarked render as a full-page image
-                // To preserve exact look: remove existing content, draw image
-                // Actually, better approach: just draw the composited image over the page
-                srcPage.drawImage(embeddedImg, {
-                    x: 0, y: 0,
-                    width: pw, height: ph,
-                    opacity: 1,
-                });
+            if (!isEncrypted) {
+                // ── Normal PDF: native pdf-lib drawing (preserves quality, minimal file size) ──
+                const srcPages = srcDoc.getPages();
+                const { StandardFonts, rgb, degrees } = PDFLib;
+
+                // Hex color → pdf-lib rgb
+                const hexRgb = (hex) => {
+                    const h = hex.replace('#', '');
+                    return rgb(parseInt(h.substring(0,2),16)/255, parseInt(h.substring(2,4),16)/255, parseInt(h.substring(4,6),16)/255);
+                };
+
+                // Map sidebar font to closest standard PDF font
+                const getStdFont = () => {
+                    const f = fontFamily.toLowerCase(), b = wmBold.checked, it = wmItalic.checked;
+                    if (f.includes('courier') || f.includes('mono')) {
+                        if (b && it) return StandardFonts.CourierBoldOblique;
+                        if (b) return StandardFonts.CourierBold;
+                        if (it) return StandardFonts.CourierOblique;
+                        return StandardFonts.Courier;
+                    }
+                    if (f.includes('times') || f.includes('georgia')) {
+                        if (b && it) return StandardFonts.TimesRomanBoldItalic;
+                        if (b) return StandardFonts.TimesRomanBold;
+                        if (it) return StandardFonts.TimesRomanItalic;
+                        return StandardFonts.TimesRoman;
+                    }
+                    if (b && it) return StandardFonts.HelveticaBoldOblique;
+                    if (b) return StandardFonts.HelveticaBold;
+                    if (it) return StandardFonts.HelveticaOblique;
+                    return StandardFonts.Helvetica;
+                };
+
+                // Downscale logo to max display size × 2 (retina) before embedding
+                let maxLogoW = 0;
+                for (let pi = 0; pi < totalPg; pi++) {
+                    if (!pagesToMark.has(pi)) continue;
+                    maxLogoW = Math.max(maxLogoW, srcPages[pi].getSize().width * sizePct);
+                }
+                const logoAR = logoImg.naturalHeight / logoImg.naturalWidth;
+                const tgtW = Math.min(logoImg.naturalWidth, Math.ceil(maxLogoW * 2));
+                const tgtH = Math.min(logoImg.naturalHeight, Math.ceil(maxLogoW * logoAR * 2));
+                const logoCanvas = document.createElement('canvas');
+                logoCanvas.width = tgtW;
+                logoCanvas.height = tgtH;
+                logoCanvas.getContext('2d').drawImage(logoImg, 0, 0, tgtW, tgtH);
+                const isPngLogo = logoDataURL.startsWith('data:image/png');
+                const logoExport = isPngLogo
+                    ? logoCanvas.toDataURL('image/png')
+                    : logoCanvas.toDataURL('image/jpeg', 0.85);
+                const logoAB = Uint8Array.from(atob(logoExport.split(',')[1]), c => c.charCodeAt(0));
+                const embLogo = isPngLogo
+                    ? await srcDoc.embedPng(logoAB)
+                    : await srcDoc.embedJpg(logoAB);
+
+                const pdfFont = await srcDoc.embedFont(getStdFont());
+                const emRgb = hexRgb(emColor);
+                const dateRgb = hexRgb(dColor);
+                const rad = (rotation * Math.PI) / 180;
+                const cosR = Math.cos(rad);
+                const sinR = Math.sin(rad);
+
+                for (let i = 0; i < totalPg; i++) {
+                    if (!pagesToMark.has(i)) continue;
+                    const pg = srcPages[i];
+                    const { width: pw, height: ph } = pg.getSize();
+
+                    const logoW = pw * sizePct;
+                    const logoH = (embLogo.height / embLogo.width) * logoW;
+
+                    let textBlockH = 0;
+                    if (emVisible && emStr) textBlockH += gapVal + emfs;
+                    if (dateVisible && wmDate.value) textBlockH += gapVal + dfs;
+
+                    // Draw one watermark unit centered at (cx, cy) in PDF coords (origin bottom-left, y up)
+                    const drawUnit = (cx, cy) => {
+                        // Rotate logo around its center: compute bottom-left after rotation
+                        const imgX = cx - (logoW/2)*cosR + (logoH/2)*sinR;
+                        const imgY = cy - (logoW/2)*sinR - (logoH/2)*cosR;
+                        pg.drawImage(embLogo, {
+                            x: imgX, y: imgY,
+                            width: logoW, height: logoH,
+                            rotate: degrees(rotation),
+                            opacity: opacity,
+                        });
+
+                        // Text below logo in the rotated frame
+                        // "Below" by d in rotated frame → page offset (d*sinR, -d*cosR)
+                        // Canvas uses textBaseline='top', pdf-lib uses baseline.
+                        // Offset by ascent (~75% of font size) so text top matches canvas.
+                        let yOff = logoH / 2;
+
+                        if (emVisible && emStr) {
+                            yOff += gapVal;
+                            const ascent = emfs * 0.75;
+                            const blOff = yOff + ascent;
+                            const tw = pdfFont.widthOfTextAtSize(emStr, emfs);
+                            const tcx = cx + blOff * sinR;
+                            const tcy = cy - blOff * cosR;
+                            pg.drawText(emStr, {
+                                x: tcx - (tw/2)*cosR,
+                                y: tcy - (tw/2)*sinR,
+                                size: emfs,
+                                font: pdfFont,
+                                color: emRgb,
+                                rotate: degrees(rotation),
+                                opacity: opacity,
+                            });
+                            yOff += emfs;
+                        }
+
+                        if (dateVisible && wmDate.value) {
+                            yOff += gapVal;
+                            const ascent = dfs * 0.75;
+                            const blOff = yOff + ascent;
+                            const tw = pdfFont.widthOfTextAtSize(dateStr, dfs);
+                            const tcx = cx + blOff * sinR;
+                            const tcy = cy - blOff * cosR;
+                            pg.drawText(dateStr, {
+                                x: tcx - (tw/2)*cosR,
+                                y: tcy - (tw/2)*sinR,
+                                size: dfs,
+                                font: pdfFont,
+                                color: dateRgb,
+                                rotate: degrees(rotation),
+                                opacity: opacity,
+                            });
+                            yOff += dfs;
+                        }
+                    };
+
+                    if (isRepeat) {
+                        const gapX = pw * spacingPct, gapY = ph * spacingPct;
+                        const unitH = logoH + textBlockH;
+                        const sX = (pw * posXPct) % (logoW + gapX) - logoW;
+                        const sY = (ph * posYPct) % (unitH + gapY) - unitH;
+                        for (let ty = sY; ty < ph + unitH; ty += unitH + gapY) {
+                            for (let tx = sX; tx < pw + logoW; tx += logoW + gapX) {
+                                drawUnit(tx + logoW/2, ph - (ty + logoH/2));
+                            }
+                        }
+                    } else {
+                        drawUnit(pw * posXPct, ph * posYPct);
+                    }
+                }
+
+                pdfBytes = await srcDoc.save();
+
+            } else {
+                // ── Encrypted PDF: render with pdf.js at 2x (144 DPI, retina quality), PNG for clarity ──
+                const encScale = 2;
+                const newDoc = await PDFDocument.create();
+
+                for (let i = 0; i < totalPg; i++) {
+                    const page = await pdfJsDoc.getPage(i + 1);
+                    const vp1 = page.getViewport({ scale: 1 });
+                    const pw = vp1.width, ph = vp1.height;
+                    const viewport = page.getViewport({ scale: encScale });
+
+                    const offCanvas = document.createElement('canvas');
+                    offCanvas.width = viewport.width;
+                    offCanvas.height = viewport.height;
+                    const offCtx = offCanvas.getContext('2d');
+
+                    // Render original page content
+                    await page.render({ canvasContext: offCtx, viewport }).promise;
+
+                    // Draw watermark on top if this page is marked
+                    if (pagesToMark.has(i)) {
+                        paintWatermark(offCtx, offCanvas.width, offCanvas.height, encScale);
+                    }
+
+                    // Embed composited page as PNG in new document
+                    const embeddedImg = await newDoc.embedPng(canvasToPngBytes(offCanvas));
+                    const newPage = newDoc.addPage([pw, ph]);
+                    newPage.drawImage(embeddedImg, { x: 0, y: 0, width: pw, height: ph });
+                }
+
+                pdfBytes = await newDoc.save();
             }
 
-            const pdfBytes = await srcDoc.save();
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
