@@ -27,6 +27,29 @@
         .header-title svg { color:var(--primary); }
         .security-badge { display:flex; align-items:center; gap:6px; background:var(--accent-glow); border:1px solid rgba(0,206,201,.2); color:var(--accent); padding:5px 12px; border-radius:20px; font-size:10px; font-weight:600; letter-spacing:.3px; text-transform:uppercase; }
         .security-badge svg { width:12px; height:12px; }
+        .info-btn { background:none; border:1px solid var(--border); color:var(--text-muted); width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all var(--transition); flex-shrink:0; }
+        .info-btn:hover { color:var(--primary); border-color:var(--primary); background:var(--primary-glow); }
+        .info-btn svg { width:15px; height:15px; }
+
+        /* ── Guide Modal ── */
+        .guide-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:200; display:none; align-items:center; justify-content:center; }
+        .guide-overlay.open { display:flex; }
+        .guide-modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; max-width:520px; width:90%; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,.5); }
+        .guide-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+        .guide-header h2 { font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px; }
+        .guide-header h2 svg { width:18px; height:18px; color:var(--primary); }
+        .guide-close { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; border-radius:6px; transition:all var(--transition); }
+        .guide-close:hover { color:var(--text); background:var(--surface2); }
+        .guide-body { padding:20px; overflow-y:auto; line-height:1.7; }
+        .guide-body::-webkit-scrollbar { width:3px; }
+        .guide-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+        .guide-body h3 { font-size:12px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 6px; }
+        .guide-body h3:first-child { margin-top:0; }
+        .guide-body p { font-size:12px; color:var(--text-muted); margin:0 0 4px; }
+        .guide-body ul { padding-left:18px; margin:0 0 8px; }
+        .guide-body li { font-size:12px; color:var(--text-muted); margin-bottom:3px; }
+        .guide-body li strong { color:var(--text); font-weight:600; }
+        .guide-body .kbd { display:inline-block; background:var(--surface3); border:1px solid var(--border); border-radius:4px; padding:1px 6px; font-size:11px; font-family:'Inter',monospace; color:var(--text); }
 
         /* ── Layout ── */
         .app-layout { display:grid; grid-template-columns:340px 1fr; height:calc(100vh - 49px); }
@@ -182,10 +205,55 @@
     <div class="header-title">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span>PDF Watermark<br><span style="font-size:9px; font-weight:400; color:var(--text-muted); letter-spacing:.2px;">By SecurityPal Design Team</span></span>
+        <button class="info-btn" id="openGuide" title="How to use">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </button>
     </div>
     <div class="security-badge">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         100% Client-Side &middot; No Data Leaves Your Browser
+    </div>
+</div>
+
+<!-- Guide Modal -->
+<div class="guide-overlay" id="guideOverlay">
+    <div class="guide-modal">
+        <div class="guide-header">
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                How to Use
+            </h2>
+            <button class="guide-close" id="closeGuide"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="guide-body">
+            <h3>1. Upload a PDF</h3>
+            <p>Drag and drop or click the upload area to select a PDF file (up to 100 MB). Your file never leaves your browser.</p>
+
+            <h3>2. Add Prospect's Name</h3>
+            <p>Enter the prospect's full name. Toggle visibility on/off, adjust font size and color.</p>
+
+            <h3>3. Add Email Stamp</h3>
+            <p>Type an email address to stamp onto the watermark. Customize size and color independently.</p>
+
+            <h3>4. Add Date Stamp</h3>
+            <p>Pick a date and format. The date stamp appears below the email in the watermark.</p>
+
+            <h3>5. Add a Logo (Optional)</h3>
+            <p>Upload a PNG, JPG, or WebP logo. The logo is off by default &mdash; toggle it on and adjust size as needed.</p>
+
+            <h3>6. Customize Appearance</h3>
+            <ul>
+                <li><strong>Text Style</strong> &mdash; Change font family, bold/italic, and gap between elements.</li>
+                <li><strong>Rotation &amp; Opacity</strong> &mdash; Apply rotation (-180&deg; to 180&deg;) and transparency to the entire watermark.</li>
+                <li><strong>Position &amp; Repeat</strong> &mdash; Drag the X/Y sliders to reposition. Enable repeat to tile the watermark across pages.</li>
+            </ul>
+
+            <h3>7. Select Pages</h3>
+            <p>Choose which pages to watermark: all, first only, current page, or specify custom page ranges (e.g. <span class="kbd">1-3, 5, 8</span>).</p>
+
+            <h3>8. Download</h3>
+            <p>Click <strong>Download PDF</strong> to generate the watermarked file. Unencrypted PDFs preserve original vector quality; encrypted PDFs are rendered at high-resolution PNG.</p>
+        </div>
     </div>
 </div>
 
@@ -220,55 +288,31 @@
             </div>
         </div>
 
-        <!-- Logo Upload -->
-        <div class="panel" id="panelLogo">
+        <!-- Prospect's Name -->
+        <div class="panel" id="panelProspect">
             <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
                 <div class="panel-header-left">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span class="panel-title">Watermark Logo</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span class="panel-title">Prospect's Name</span>
                 </div>
                 <svg class="panel-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="panel-body">
-                <div class="upload-zone upload-zone-sm" id="logoZone">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <h3>Upload Logo (PNG / JPG)</h3>
-                    <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden>
+                <div class="toggle-row">
+                    <span>Show name</span>
+                    <label class="toggle"><input type="checkbox" id="showProspect" checked><span class="toggle-track"></span></label>
                 </div>
-                <div class="file-info" id="logoInfo" style="display:none;">
-                    <div class="file-icon" style="background:var(--accent-glow); color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-                    <div class="file-details">
-                        <div class="file-name" id="logoName"></div>
-                        <div class="file-size" id="logoSize"></div>
-                    </div>
-                    <button class="remove-btn" id="removeLogo" title="Remove logo"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                </div>
-                <img id="logoPreview" class="logo-preview" style="display:none;" alt="Logo preview">
-            </div>
-        </div>
-
-        <!-- Appearance -->
-        <div class="panel" id="panelAppearance">
-            <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                <div class="panel-header-left">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    <span class="panel-title">Appearance</span>
-                </div>
-                <svg class="panel-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="panel-body">
                 <div class="control-group">
-                    <label class="control-label">Logo Size <span class="control-value" id="logoSizeVal">20%</span></label>
-                    <input type="range" id="wmLogoSize" min="2" max="80" value="20">
+                    <input type="text" id="prospectName" placeholder="Prospect's full name">
                 </div>
                 <div class="row">
                     <div class="control-group">
-                        <label class="control-label">Rotation <span class="control-value" id="rotationVal">0°</span></label>
-                        <input type="range" id="wmRotation" min="-180" max="180" value="0">
+                        <label class="control-label">Size <span class="control-value" id="prospectSizeVal">14</span></label>
+                        <input type="range" id="prospectFontSize" min="8" max="60" value="14">
                     </div>
-                    <div class="control-group">
-                        <label class="control-label">Opacity <span class="control-value" id="opacityVal">30%</span></label>
-                        <input type="range" id="wmOpacity" min="1" max="100" value="30">
+                    <div class="color-row">
+                        <label>Color</label>
+                        <input type="color" id="prospectColor" value="#333333">
                     </div>
                 </div>
             </div>
@@ -286,7 +330,7 @@
             <div class="panel-body">
                 <div class="toggle-row">
                     <span>Show email</span>
-                    <label class="toggle"><input type="checkbox" id="showEmail"><span class="toggle-track"></span></label>
+                    <label class="toggle"><input type="checkbox" id="showEmail" checked><span class="toggle-track"></span></label>
                 </div>
                 <div class="control-group">
                     <input type="email" id="wmEmail" placeholder="user@example.com">
@@ -346,6 +390,41 @@
             </div>
         </div>
 
+        <!-- Watermark Logo -->
+        <div class="panel" id="panelLogo">
+            <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="panel-header-left">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span class="panel-title">Watermark Logo</span>
+                </div>
+                <svg class="panel-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="panel-body">
+                <div class="toggle-row">
+                    <span>Show Logo</span>
+                    <label class="toggle"><input type="checkbox" id="showLogo"><span class="toggle-track"></span></label>
+                </div>
+                <div class="upload-zone upload-zone-sm" id="logoZone">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <h3>Upload Logo (PNG / JPG)</h3>
+                    <input type="file" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden>
+                </div>
+                <div class="file-info" id="logoInfo" style="display:none;">
+                    <div class="file-icon" style="background:var(--accent-glow); color:var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                    <div class="file-details">
+                        <div class="file-name" id="logoName"></div>
+                        <div class="file-size" id="logoSize"></div>
+                    </div>
+                    <button class="remove-btn" id="removeLogo" title="Remove logo"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                </div>
+                <img id="logoPreview" class="logo-preview" style="display:none;" alt="Logo preview">
+                <div class="control-group">
+                    <label class="control-label">Logo Size <span class="control-value" id="logoSizeVal">20%</span></label>
+                    <input type="range" id="wmLogoSize" min="2" max="80" value="20">
+                </div>
+            </div>
+        </div>
+
         <!-- Text Style -->
         <div class="panel" id="panelTextStyle">
             <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
@@ -377,6 +456,29 @@
                     <div class="control-group" style="flex:1; margin-left:8px;">
                         <label class="control-label">Gap <span class="control-value" id="gapVal">6</span></label>
                         <input type="range" id="wmGap" min="0" max="80" value="6">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rotation & Opacity (Global) -->
+        <div class="panel" id="panelTransform">
+            <div class="panel-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="panel-header-left">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    <span class="panel-title">Rotation &amp; Opacity</span>
+                </div>
+                <svg class="panel-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="control-group">
+                        <label class="control-label">Rotation <span class="control-value" id="rotationVal">0°</span></label>
+                        <input type="range" id="wmRotation" min="-180" max="180" value="0">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Opacity <span class="control-value" id="opacityVal">30%</span></label>
+                        <input type="range" id="wmOpacity" min="1" max="100" value="30">
                     </div>
                 </div>
             </div>
@@ -494,6 +596,13 @@
     let baseScale = 1.0;
 
     const $ = id => document.getElementById(id);
+
+    // ── Guide Modal ──
+    const guideOverlay = $('guideOverlay');
+    $('openGuide').addEventListener('click', () => guideOverlay.classList.add('open'));
+    $('closeGuide').addEventListener('click', () => guideOverlay.classList.remove('open'));
+    guideOverlay.addEventListener('click', e => { if (e.target === guideOverlay) guideOverlay.classList.remove('open'); });
+
     const uploadZone = $('uploadZone');
     const fileInput = $('fileInput');
     const fileInfo = $('fileInfo');
@@ -537,6 +646,11 @@
     const wmFontFamily = $('wmFontFamily');
     const wmBold = $('wmBold');
     const wmItalic = $('wmItalic');
+    const showLogo = $('showLogo');
+    const showProspect = $('showProspect');
+    const prospectName = $('prospectName');
+    const prospectFontSize = $('prospectFontSize');
+    const prospectColor = $('prospectColor');
     const showEmail = $('showEmail');
     const wmEmail = $('wmEmail');
     const emailFontSize = $('emailFontSize');
@@ -584,7 +698,7 @@
             fileSize.textContent = formatBytes(file.size);
             uploadZone.style.display = 'none';
             fileInfo.style.display = 'flex';
-            btnDownload.disabled = !logoImg;
+            btnDownload.disabled = false;
             btnReset.style.display = 'flex';
             await loadPreview();
             showToast('PDF loaded');
@@ -601,7 +715,6 @@
         logoZone.style.display = '';
         logoInfoEl.style.display = 'none';
         logoPreview.style.display = 'none';
-        btnDownload.disabled = true;
         drawWatermarkOverlay();
     });
 
@@ -620,6 +733,7 @@
                 logoPreview.src = logoDataURL;
                 logoPreview.style.display = 'block';
                 if (pdfArrayBuffer) btnDownload.disabled = false;
+                showLogo.checked = true;
                 drawWatermarkOverlay();
                 showToast('Logo loaded');
             };
@@ -698,10 +812,15 @@
     }
 
     // ── Draw watermark on canvas (this is the single source of truth) ──
-    // Render order: Logo → Email → Date
+    // Render order: Logo → Prospect → Email → Date
     function drawWatermarkOverlay() {
         wmCtx.clearRect(0, 0, wmCanvas.width, wmCanvas.height);
-        if (!logoImg) return;
+
+        const logoVisible = showLogo.checked && logoImg;
+        const prospectVisible = showProspect.checked && prospectName.value.trim();
+        const emailVisible = showEmail.checked && wmEmail.value.trim();
+        const dateVisible = showDate.checked;
+        if (!logoVisible && !prospectVisible && !emailVisible && !dateVisible) return;
 
         const cw = wmCanvas.width;
         const ch = wmCanvas.height;
@@ -716,36 +835,43 @@
         const gap = parseInt(wmGap.value) * sc;
         const fontFamily = wmFontFamily.value;
 
-        const emailVisible = showEmail.checked;
         const emailStr = wmEmail.value.trim();
         const efs = parseInt(emailFontSize.value);
         const eColor = emailColor.value;
 
-        const dateVisible = showDate.checked;
+        const pName = prospectName.value.trim();
+        const pfs = parseInt(prospectFontSize.value);
+        const pColor = prospectColor.value;
+
         const dateStr = formatDateStr(wmDate.value, dateFormat.value);
         const dfs = parseInt(dateFontSize.value);
         const dColor = dateColor.value;
 
-        const logoW = cw * sizePct;
-        const logoH = (logoImg.naturalHeight / logoImg.naturalWidth) * logoW;
+        const logoW = logoVisible ? cw * sizePct : 0;
+        const logoH = logoVisible ? (logoImg.naturalHeight / logoImg.naturalWidth) * logoW : 0;
 
         // Compute total text block height below logo for tiling
         let textBlockH = 0;
-        if (emailVisible && emailStr) textBlockH += gap + efs * sc;
+        if (prospectVisible) textBlockH += gap + pfs * sc;
+        if (emailVisible) textBlockH += gap + efs * sc;
         if (dateVisible) textBlockH += gap + dfs * sc;
+
+        // Unit width for tiling: max of logo width and a reasonable text width
+        const unitW = logoW || cw * 0.2;
+        const unitH = logoH + textBlockH || 20 * sc;
 
         wmCtx.globalAlpha = opacity;
 
-        const wmParams = { logoW, logoH, rotation, gap, fontFamily, emailVisible, emailStr, efs, eColor, dateVisible, dateStr, dfs, dColor };
+        const wmParams = { logoVisible, logoW, logoH, rotation, gap, fontFamily, prospectVisible, pName, pfs, pColor, emailVisible, emailStr, efs, eColor, dateVisible, dateStr, dfs, dColor };
 
         if (isRepeat) {
             const gapX = cw * spacing;
             const gapY = ch * spacing;
-            const startX = (cw * posXPct) % (logoW + gapX) - logoW;
-            const startY = (ch * posYPct) % (logoH + textBlockH + gapY) - logoH;
-            for (let y = startY; y < ch + logoH; y += logoH + textBlockH + gapY) {
-                for (let x = startX; x < cw + logoW; x += logoW + gapX) {
-                    drawSingleWatermark(x + logoW/2, y + logoH/2, wmParams);
+            const startX = (cw * posXPct) % (unitW + gapX) - unitW;
+            const startY = (ch * posYPct) % (unitH + gapY) - unitH;
+            for (let y = startY; y < ch + unitH; y += unitH + gapY) {
+                for (let x = startX; x < cw + unitW; x += unitW + gapX) {
+                    drawSingleWatermark(x + unitW/2, y + (logoH || 0)/2, wmParams);
                 }
             }
         } else {
@@ -757,18 +883,31 @@
         wmCtx.globalAlpha = 1;
     }
 
-    // Order: Logo → Email → Date
+    // Order: Logo → Prospect → Email → Date
     function drawSingleWatermark(cx, cy, p) {
         wmCtx.save();
         wmCtx.translate(cx, cy);
         wmCtx.rotate((p.rotation * Math.PI) / 180);
 
-        wmCtx.drawImage(logoImg, -p.logoW/2, -p.logoH/2, p.logoW, p.logoH);
-
-        let yOff = p.logoH / 2;
+        let yOff = 0;
+        if (p.logoVisible) {
+            wmCtx.drawImage(logoImg, -p.logoW/2, -p.logoH/2, p.logoW, p.logoH);
+            yOff = p.logoH / 2;
+        }
         const sc = baseScale * zoomScale;
 
-        if (p.emailVisible && p.emailStr) {
+        if (p.prospectVisible) {
+            yOff += p.gap;
+            const scaledFs = p.pfs * sc;
+            wmCtx.font = buildFont(scaledFs, p.fontFamily);
+            wmCtx.fillStyle = p.pColor;
+            wmCtx.textAlign = 'center';
+            wmCtx.textBaseline = 'top';
+            wmCtx.fillText(p.pName, 0, yOff);
+            yOff += scaledFs;
+        }
+
+        if (p.emailVisible) {
             yOff += p.gap;
             const scaledFs = p.efs * sc;
             wmCtx.font = buildFont(scaledFs, p.fontFamily);
@@ -804,6 +943,7 @@
         $('spacingVal').textContent = wmSpacing.value + '%';
         $('gapVal').textContent = wmGap.value;
         $('emailSizeVal').textContent = emailFontSize.value;
+        $('prospectSizeVal').textContent = prospectFontSize.value;
     }
 
     // ── Bold / Italic style buttons ──
@@ -812,7 +952,7 @@
     boldBtn.addEventListener('click', () => { boldBtn.classList.toggle('active', wmBold.checked); });
     italicBtn.addEventListener('click', () => { italicBtn.classList.toggle('active', wmItalic.checked); });
 
-    const allControls = [wmLogoSize, wmRotation, wmOpacity, wmPosX, wmPosY, showDate, wmDate, dateFormat, dateFontSize, dateColor, showEmail, wmEmail, emailFontSize, emailColor, wmGap, wmFontFamily, wmBold, wmItalic, repeatWm, wmSpacing, pageMode, customPagesInput];
+    const allControls = [wmLogoSize, wmRotation, wmOpacity, wmPosX, wmPosY, showDate, wmDate, dateFormat, dateFontSize, dateColor, showLogo, showProspect, prospectName, prospectFontSize, prospectColor, showEmail, wmEmail, emailFontSize, emailColor, wmGap, wmFontFamily, wmBold, wmItalic, repeatWm, wmSpacing, pageMode, customPagesInput];
 
     pageMode.addEventListener('change', () => {
         $('customPagesGroup').style.display = pageMode.value === 'custom' ? '' : 'none';
@@ -831,7 +971,7 @@
     // ── Download ──
     const dlBtnHTML = btnDownload.innerHTML;
     btnDownload.addEventListener('click', async () => {
-        if (!pdfArrayBuffer || !logoImg) return;
+        if (!pdfArrayBuffer) return;
         btnDownload.disabled = true;
         btnDownload.innerHTML = '<span class="spinner"></span> Processing...';
 
@@ -891,6 +1031,11 @@
             const posYPct = parseInt(wmPosY.value) / 100;
             const isRepeat = repeatWm.checked;
             const spacingPct = parseInt(wmSpacing.value) / 100;
+            const logoVis = showLogo.checked && logoImg;
+            const prospectVis = showProspect.checked && prospectName.value.trim();
+            const pNameStr = prospectName.value.trim();
+            const pfs = parseInt(prospectFontSize.value);
+            const pColorVal = prospectColor.value;
             const dateVisible = showDate.checked;
             const dateStr = formatDateStr(wmDate.value, dateFormat.value);
             const dfs = parseInt(dateFontSize.value);
@@ -914,13 +1059,17 @@
             // scaleOverride: optional, used for encrypted PDFs rendered at higher DPI
             const paintWatermark = (ctx, cw, ch, scaleOverride) => {
                 const sc = scaleOverride || wmScale;
-                const logoW = cw * sizePct;
-                const logoH = (logoImg.naturalHeight / logoImg.naturalWidth) * logoW;
+                const logoW = logoVis ? cw * sizePct : 0;
+                const logoH = logoVis ? (logoImg.naturalHeight / logoImg.naturalWidth) * logoW : 0;
                 const dlGap = gapVal * sc;
 
                 let textBlockH = 0;
+                if (prospectVis) textBlockH += dlGap + pfs * sc;
                 if (emVisible && emStr) textBlockH += dlGap + emfs * sc;
                 if (dateVisible && wmDate.value) textBlockH += dlGap + dfs * sc;
+
+                const unitW = logoW || cw * 0.2;
+                const unitH = logoH + textBlockH || 20 * sc;
 
                 ctx.globalAlpha = opacity;
 
@@ -928,8 +1077,21 @@
                     ctx.save();
                     ctx.translate(cx, cy);
                     ctx.rotate((rotation * Math.PI) / 180);
-                    ctx.drawImage(logoImg, -logoW/2, -logoH/2, logoW, logoH);
-                    let yOff = logoH / 2;
+                    let yOff = 0;
+                    if (logoVis) {
+                        ctx.drawImage(logoImg, -logoW/2, -logoH/2, logoW, logoH);
+                        yOff = logoH / 2;
+                    }
+                    if (prospectVis) {
+                        yOff += dlGap;
+                        const scaledFs = pfs * sc;
+                        ctx.font = buildDlFont(scaledFs);
+                        ctx.fillStyle = pColorVal;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(pNameStr, 0, yOff);
+                        yOff += scaledFs;
+                    }
                     if (emVisible && emStr) {
                         yOff += dlGap;
                         const scaledFs = emfs * sc;
@@ -955,11 +1117,11 @@
 
                 if (isRepeat) {
                     const gapX = cw * spacingPct, gapY = ch * spacingPct;
-                    const sX = (cw * posXPct) % (logoW + gapX) - logoW;
-                    const sY = (ch * posYPct) % (logoH + textBlockH + gapY) - logoH;
-                    for (let yy = sY; yy < ch + logoH; yy += logoH + textBlockH + gapY) {
-                        for (let xx = sX; xx < cw + logoW; xx += logoW + gapX) {
-                            drawOne(xx + logoW/2, yy + logoH/2);
+                    const sX = (cw * posXPct) % (unitW + gapX) - unitW;
+                    const sY = (ch * posYPct) % (unitH + gapY) - unitH;
+                    for (let yy = sY; yy < ch + unitH; yy += unitH + gapY) {
+                        for (let xx = sX; xx < cw + unitW; xx += unitW + gapX) {
+                            drawOne(xx + unitW/2, yy + (logoH || 0)/2);
                         }
                     }
                 } else {
@@ -1009,112 +1171,113 @@
                     return StandardFonts.Helvetica;
                 };
 
-                // Downscale logo to max display size × 2 (retina) before embedding
-                let maxLogoW = 0;
-                for (let pi = 0; pi < totalPg; pi++) {
-                    if (!pagesToMark.has(pi)) continue;
-                    maxLogoW = Math.max(maxLogoW, srcPages[pi].getSize().width * sizePct);
+                // Embed logo only if visible
+                let embLogo = null;
+                if (logoVis) {
+                    let maxLogoW = 0;
+                    for (let pi = 0; pi < totalPg; pi++) {
+                        if (!pagesToMark.has(pi)) continue;
+                        maxLogoW = Math.max(maxLogoW, srcPages[pi].getSize().width * sizePct);
+                    }
+                    const logoAR = logoImg.naturalHeight / logoImg.naturalWidth;
+                    const tgtW = Math.min(logoImg.naturalWidth, Math.ceil(maxLogoW * 2));
+                    const tgtH = Math.min(logoImg.naturalHeight, Math.ceil(maxLogoW * logoAR * 2));
+                    const logoCanvas = document.createElement('canvas');
+                    logoCanvas.width = tgtW;
+                    logoCanvas.height = tgtH;
+                    logoCanvas.getContext('2d').drawImage(logoImg, 0, 0, tgtW, tgtH);
+                    const isPngLogo = logoDataURL.startsWith('data:image/png');
+                    const logoExport = isPngLogo
+                        ? logoCanvas.toDataURL('image/png')
+                        : logoCanvas.toDataURL('image/jpeg', 0.85);
+                    const logoAB = Uint8Array.from(atob(logoExport.split(',')[1]), c => c.charCodeAt(0));
+                    embLogo = isPngLogo
+                        ? await srcDoc.embedPng(logoAB)
+                        : await srcDoc.embedJpg(logoAB);
                 }
-                const logoAR = logoImg.naturalHeight / logoImg.naturalWidth;
-                const tgtW = Math.min(logoImg.naturalWidth, Math.ceil(maxLogoW * 2));
-                const tgtH = Math.min(logoImg.naturalHeight, Math.ceil(maxLogoW * logoAR * 2));
-                const logoCanvas = document.createElement('canvas');
-                logoCanvas.width = tgtW;
-                logoCanvas.height = tgtH;
-                logoCanvas.getContext('2d').drawImage(logoImg, 0, 0, tgtW, tgtH);
-                const isPngLogo = logoDataURL.startsWith('data:image/png');
-                const logoExport = isPngLogo
-                    ? logoCanvas.toDataURL('image/png')
-                    : logoCanvas.toDataURL('image/jpeg', 0.85);
-                const logoAB = Uint8Array.from(atob(logoExport.split(',')[1]), c => c.charCodeAt(0));
-                const embLogo = isPngLogo
-                    ? await srcDoc.embedPng(logoAB)
-                    : await srcDoc.embedJpg(logoAB);
 
                 const pdfFont = await srcDoc.embedFont(getStdFont());
                 const emRgb = hexRgb(emColor);
+                const pRgb = hexRgb(pColorVal);
                 const dateRgb = hexRgb(dColor);
                 const rad = (rotation * Math.PI) / 180;
                 const cosR = Math.cos(rad);
                 const sinR = Math.sin(rad);
+
+                // Helper: draw centered text at yOff below watermark center
+                const drawTextAt = (pg, text, fontSize, color, cx, cy, yOff) => {
+                    const ascent = fontSize * 0.75;
+                    const blOff = yOff + ascent;
+                    const tw = pdfFont.widthOfTextAtSize(text, fontSize);
+                    const tcx = cx + blOff * sinR;
+                    const tcy = cy - blOff * cosR;
+                    pg.drawText(text, {
+                        x: tcx - (tw/2)*cosR,
+                        y: tcy - (tw/2)*sinR,
+                        size: fontSize,
+                        font: pdfFont,
+                        color: color,
+                        rotate: degrees(rotation),
+                        opacity: opacity,
+                    });
+                };
 
                 for (let i = 0; i < totalPg; i++) {
                     if (!pagesToMark.has(i)) continue;
                     const pg = srcPages[i];
                     const { width: pw, height: ph } = pg.getSize();
 
-                    const logoW = pw * sizePct;
-                    const logoH = (embLogo.height / embLogo.width) * logoW;
+                    const logoW = logoVis ? pw * sizePct : 0;
+                    const logoH = (logoVis && embLogo) ? (embLogo.height / embLogo.width) * logoW : 0;
 
                     let textBlockH = 0;
+                    if (prospectVis) textBlockH += gapVal + pfs;
                     if (emVisible && emStr) textBlockH += gapVal + emfs;
                     if (dateVisible && wmDate.value) textBlockH += gapVal + dfs;
 
-                    // Draw one watermark unit centered at (cx, cy) in PDF coords (origin bottom-left, y up)
+                    const unitW = logoW || pw * 0.2;
+                    const unitH = (logoH + textBlockH) || 20;
+
                     const drawUnit = (cx, cy) => {
-                        // Rotate logo around its center: compute bottom-left after rotation
-                        const imgX = cx - (logoW/2)*cosR + (logoH/2)*sinR;
-                        const imgY = cy - (logoW/2)*sinR - (logoH/2)*cosR;
-                        pg.drawImage(embLogo, {
-                            x: imgX, y: imgY,
-                            width: logoW, height: logoH,
-                            rotate: degrees(rotation),
-                            opacity: opacity,
-                        });
-
-                        // Text below logo in the rotated frame
-                        // "Below" by d in rotated frame → page offset (d*sinR, -d*cosR)
-                        // Canvas uses textBaseline='top', pdf-lib uses baseline.
-                        // Offset by ascent (~75% of font size) so text top matches canvas.
-                        let yOff = logoH / 2;
-
-                        if (emVisible && emStr) {
-                            yOff += gapVal;
-                            const ascent = emfs * 0.75;
-                            const blOff = yOff + ascent;
-                            const tw = pdfFont.widthOfTextAtSize(emStr, emfs);
-                            const tcx = cx + blOff * sinR;
-                            const tcy = cy - blOff * cosR;
-                            pg.drawText(emStr, {
-                                x: tcx - (tw/2)*cosR,
-                                y: tcy - (tw/2)*sinR,
-                                size: emfs,
-                                font: pdfFont,
-                                color: emRgb,
+                        let yOff = 0;
+                        if (logoVis && embLogo) {
+                            const imgX = cx - (logoW/2)*cosR + (logoH/2)*sinR;
+                            const imgY = cy - (logoW/2)*sinR - (logoH/2)*cosR;
+                            pg.drawImage(embLogo, {
+                                x: imgX, y: imgY,
+                                width: logoW, height: logoH,
                                 rotate: degrees(rotation),
                                 opacity: opacity,
                             });
+                            yOff = logoH / 2;
+                        }
+
+                        if (prospectVis) {
+                            yOff += gapVal;
+                            drawTextAt(pg, pNameStr, pfs, pRgb, cx, cy, yOff);
+                            yOff += pfs;
+                        }
+
+                        if (emVisible && emStr) {
+                            yOff += gapVal;
+                            drawTextAt(pg, emStr, emfs, emRgb, cx, cy, yOff);
                             yOff += emfs;
                         }
 
                         if (dateVisible && wmDate.value) {
                             yOff += gapVal;
-                            const ascent = dfs * 0.75;
-                            const blOff = yOff + ascent;
-                            const tw = pdfFont.widthOfTextAtSize(dateStr, dfs);
-                            const tcx = cx + blOff * sinR;
-                            const tcy = cy - blOff * cosR;
-                            pg.drawText(dateStr, {
-                                x: tcx - (tw/2)*cosR,
-                                y: tcy - (tw/2)*sinR,
-                                size: dfs,
-                                font: pdfFont,
-                                color: dateRgb,
-                                rotate: degrees(rotation),
-                                opacity: opacity,
-                            });
+                            drawTextAt(pg, dateStr, dfs, dateRgb, cx, cy, yOff);
                             yOff += dfs;
                         }
                     };
 
                     if (isRepeat) {
                         const gapX = pw * spacingPct, gapY = ph * spacingPct;
-                        const unitH = logoH + textBlockH;
-                        const sX = (pw * posXPct) % (logoW + gapX) - logoW;
+                        const sX = (pw * posXPct) % (unitW + gapX) - unitW;
                         const sY = (ph * posYPct) % (unitH + gapY) - unitH;
                         for (let ty = sY; ty < ph + unitH; ty += unitH + gapY) {
-                            for (let tx = sX; tx < pw + logoW; tx += logoW + gapX) {
-                                drawUnit(tx + logoW/2, ph - (ty + logoH/2));
+                            for (let tx = sX; tx < pw + unitW; tx += unitW + gapX) {
+                                drawUnit(tx + unitW/2, ph - (ty + (logoH || 0)/2));
                             }
                         }
                     } else {
